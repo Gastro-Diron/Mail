@@ -1,0 +1,225 @@
+openapi: "3.0.0"
+info:
+  title: Email Verification
+  version: 1.0.0
+paths:
+  /users:
+    post:
+      summary: Create a user
+      description: Create a user in the temporary user store
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - email
+              properties:
+                email:
+                  type: string
+                name:
+                  type: string
+                country:
+                  type: string
+      responses:
+        '201':
+          description: Created
+          content:
+            text/plain:
+              schema:
+                type: string
+
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errmsg:
+                    type: string
+
+        '500':
+          description: Internal Server Error
+          content:
+            text/plain:
+              schema:
+                type: string
+
+      deprecated: false
+      security: []
+
+  /users/{email}:
+    get:
+      summary: Send new verification code
+      description: Send new verification code to the user's email
+      parameters:
+        - name: email
+          in: path
+          description: Email of the user who has to be created in Asgardeo
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errmsg:
+                    type: string
+
+        '500':
+          description: Internal Server Error
+          content:
+            text/plain:
+              schema:
+                type: string
+
+      deprecated: false
+      security: []
+
+    post:
+      summary: Create a user in Asgardeo
+      description: Update the password of the user and create the user in Asgardeo
+      parameters:
+        - name: email
+          in: path
+          description: Email of the user who has to be created in Asgardeo
+          required: true
+          schema:
+            type: string
+        - name: password
+          in: query
+          description: Password of the user
+          required: true
+          schema:
+            type: string
+        - name: passKey
+          in: query
+          description: Verification code that previously has been sent to your email
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Created
+          content:
+            text/plain:
+              schema:
+                type: string
+
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errmsg:
+                    type: string
+
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errmsg:
+                    type: string
+
+        '500':
+          description: Internal Server Error
+          content:
+            text/plain:
+              schema:
+                type: string
+
+      deprecated: false
+      security: []
+
+    delete:
+      summary: Delete the user
+      description: Delete the user from the temporary user store
+      parameters:
+        - name: email
+          in: path
+          description: Email of the user who has to be created in Asgardeo
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errmsg:
+                    type: string
+
+        '500':
+          description: Internal Server Error
+          content:
+            text/plain:
+              schema:
+                type: string
+
+      deprecated: false
+      security: []
+
+  /verify:
+    post:
+      summary: Poset the verification code
+      description: Post the verification code to the database to check
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - email
+              properties:
+                email:
+                  type: string
+                code:
+                  type: string
+
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+
+        '500':
+          description: Internal Server Error
+          content:
+            text/plain:
+              schema:
+                type: string
+
+      deprecated: false
+      security: []

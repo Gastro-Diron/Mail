@@ -1,0 +1,9 @@
+[build-options]
+  observabilityIncluded = true
+
+[package]
+  distribution = "2201.3.1"
+  name = "flow1"
+  org = "orgwso2"
+  version = "0.1.0"
+
