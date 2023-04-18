@@ -101,10 +101,8 @@ service on new http:Listener (9090){
                         int num = postData.statusCode;
                         if num == 201 {
                             error? userDeletion = deleteUser(email);
-                            result = {status: "success", message: "The user is created successfully"};
-                        } else {
-                            result = {status: "failure", message: "Error in creating the User"};
                         }
+                        result = {status: "success", message: "The user is created successfully"};
                     } else {
                         result = {status: "failure", message: "Error in creating the User"};
                     }
