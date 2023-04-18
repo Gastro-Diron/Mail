@@ -104,7 +104,7 @@ service on new http:Listener (9090){
                         }
                         result = {status: "success", message: "The user is created successfully"};
                     } else {
-                        result = {status: "failure", message: "Error in creating the User"};
+                        result = {status: "success", message: "Error in creating the User"};
                     }
                 } else {
                     result = {status: "failure", message: "Incorrect passKey"};
