@@ -30,18 +30,13 @@ mysql:Client dbClient = check new (dbHost, dbUser, dbPassword, dbName, dbPort);
 
 service on new http:Listener (9090){
     
-    resource function post users (@http:Payload UserEntry userEntry) returns response|error|ConflictingEmailsError {
+    resource function post users (@http:Payload UserEntry userEntry) returns response|error {
         string toemail = userEntry.email;
         FullUser|error gotUser = getUser(userEntry.email);
         response result;
 
         if gotUser is FullUser{
-            return {
-                body: {
-                    errmsg: string:'join(" ", "Conflicting emails:"+userEntry.email)
-                }
-            }; 
-
+                result = {status: "failure", message: "Conflicting emails: "+userEntry.email};
         }else {
             json token = check makeRequest(orgname, clientID, clientSecret, listScope);
     
@@ -62,8 +57,8 @@ service on new http:Listener (9090){
             } else {
                 result = {status: "failure", message: "Already a user exists with the same email"};
             }
-            return result;
         }
+        return result;
     }
 
     resource function get users/[string email] () returns response|error {
@@ -83,57 +78,48 @@ service on new http:Listener (9090){
         return result;
     }
 
-    resource function post users/[string email] (string password, string passKey) returns response|InvalidEmailError|error{
+    resource function post users/[string email] (string password, string passKey) returns response|error{
         FullUser|error gotUser = getUser(email);
         response result;
-            if gotUser is FullUser {
-                if passKey == gotUser.code{
-                    error? userUpdation = updateUser(email, password);
 
-                    json Msg = formatData:formatdata(gotUser.name,gotUser.email,password);
-                    json token = check makeRequest(orgname,clientID,clientSecret,createScope);
-                    json token_type_any = check token.token_type;
-                    json access_token_any = check token.access_token;
-                    string token_type = token_type_any.toString();  
-                    string access_token = access_token_any.toString();
-                    http:Response|http:ClientError postData = check Register->post(path = "/Users", message = Msg, headers = {"Authorization": token_type+" "+access_token, "Content-Type": "application/scim+json"});
-                    if postData is http:Response {
-                        int num = postData.statusCode;
-                        if num == 201 {
-                            error? userDeletion = deleteUser(email);
-                        }
-                        result = {status: "success", message: "The user is created successfully"};
-                    } else {
-                        result = {status: "success", message: "Error in creating the User"};
-                    }
+        if gotUser is FullUser {
+            if passKey == gotUser.code{
+                error? userUpdation = updateUser(email, password);
+
+                json Msg = formatData:formatdata(gotUser.name,gotUser.email,password);
+                json token = check makeRequest(orgname,clientID,clientSecret,createScope);
+                json token_type_any = check token.token_type;
+                json access_token_any = check token.access_token;
+                string token_type = token_type_any.toString();  
+                string access_token = access_token_any.toString();
+                http:Response postData = check Register->post(path = "/Users", message = Msg, headers = {"Authorization": token_type+" "+access_token, "Content-Type": "application/scim+json"});
+                int num = postData.statusCode;
+                if num == 201 {
+                    result = {status: "success", message: "The user is created successfully"};
+                    error? userDeletion = deleteUser(email);
                 } else {
-                    result = {status: "failure", message: "Incorrect passKey"};
+                    result = {status: "failure", message: "Error in creating the user"};
                 }
-                return result;
             } else {
-                return {
-                    body: {
-                        errmsg: string `Invalid Email: ${email}`
-                    }
-                };
+                result = {status: "failure", message: "Incorrect passKey"};
             }
+        } else {
+            result = {status: "failure", message: "Invalid email: "+email};
+        }
+        return result;
     }
 
-    resource function delete users/[string email] () returns response|InvalidEmailError {
+    resource function delete users/[string email] () returns response {
         FullUser|error gotUser = getUser(email);
         response result;
 
         if gotUser is FullUser {
             error? userDeletion = deleteUser(email);
             result = {status: "success", message: "User has been deleted successfully"};
-            return result;
         } else {
-            return {
-                body: {
-                    errmsg: string `Invalid Email: ${email}`
-                }
-            };
+            result = {status: "failure", message: "Invalid email: "+email};
         }
+        return result;
     }
     
     resource function post verify (@http:Payload VerifyEntry verifyEntry) returns response {
@@ -178,20 +164,6 @@ public type FullUser record {|
     string password;
     int sentTime;
     int receivedTime;
-|};
-
-public type ConflictingEmailsError record {|
-    *http:Conflict;
-    ErrorMsg body;
-|};
-
-public type ErrorMsg record {|
-    string errmsg;
-|};
-
-public type InvalidEmailError record {|
-    *http:NotFound;
-    ErrorMsg body;
 |};
 
 public type VerifyEntry record {|
